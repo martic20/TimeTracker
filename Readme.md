@@ -43,3 +43,6 @@ DATABASE_URL=mysql://app_user:helloworld@db:3306/app_db?serverVersion=8.0.23
 You could change the name, user and password of the database in the `env` file at the root of the project.
 
 7. Generate the .env file from env.dist and the .docker/.env from .docker/.env.dist with the correct user data and passwords.
+
+## Credits
+Created using this BoilerPlate: [Docker + PHP 8.1 + MySQL + Nginx + Symfony 6.1 Boilerplate](https://github.com/ger86/symfony-docker)
