@@ -12,3 +12,4 @@
 symfony.lock
 .env
 .docker/.env
+composer.lock
