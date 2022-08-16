@@ -41,7 +41,7 @@ class ListCommand extends Command
         $tasks = $this->doctrine->getRepository(Task::class)->findAll();
 
         if(count($tasks)==0){ 
-            $io->success(sprintf('0 tasks found. You can start a new one typing app:task start "yourtaskname'));
+            $io->note(sprintf('0 tasks found. You can start a new one typing app:task start "yourTaskName'));
             return Command::SUCCESS;
         }
 
