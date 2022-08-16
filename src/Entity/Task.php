@@ -145,7 +145,7 @@ class Task
         $finalTempDate->add($this->elapsed_time);
         $finalTempDate->add($time);
 
-        $this->elapsed_time = $finalTempDate->diff($initialTempDate);
+        $this->elapsed_time = $initialTempDate->diff($finalTempDate);
 
         return $this;
     }

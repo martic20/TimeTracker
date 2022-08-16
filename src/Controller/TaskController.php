@@ -9,8 +9,10 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Doctrine\Persistence\ManagerRegistry;
 use App\Entity\Task;
+use App\Entity\TaskTimes;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+use Doctrine\ORM\Query\ResultSetMapping;
 
 
 class TaskController extends AbstractController
@@ -24,6 +26,7 @@ class TaskController extends AbstractController
 
         //to check if currently working in a task or not
         $startedTaskId = $this->checkForStartedTask($doctrine);
+        $startedTask = $doctrine->getRepository(Task::class)->find($startedTaskId);
         
         $entityManager = $doctrine->getManager();
         
@@ -49,16 +52,36 @@ class TaskController extends AbstractController
             
         }
         
+        //for when refreshing the page having an started task active you 
+        // not losing the temporal elapsed time
+        //as we don't persist this modifications into the DB they don't have any effect for future requests
+        if($startedTask!=null){ // if there's not any active task don't need to do this
+            if (!$startedTask->getTaskTimes()->isEmpty()){ 
+                $taskTime = $startedTask->getTaskTimes()->last();
+                $taskTime->end();
+                $startedTask->addElapsedTime($taskTime); 
+            }
+        }
+        //do the same for the global task timer 
+        $totalTime = $doctrine->getRepository(Task::class)->findElapsedTimeToday();
+        $globalTask = new Task();
+        $globalTask->setElapsedTime($totalTime);
+        if($startedTask!=null) $globalTask->addElapsedTime($taskTime); 
+        
+
+
         //render the page
         return $this->render('home.html.twig', [
             'tasks' => $tasks,
             'form' => $form->createView(),
-            'startedTaskId' => $startedTaskId
+            'startedTaskId' => $startedTaskId,
+            'globalTask' => $globalTask,
+            'startedTask' => $startedTask
         ]);
         
     }
 
-    #[Route(path: '/stop_task/', name: 'task_stop', methods: ['GET'])]
+    #[Route(path: '/task_stop/', name: 'task_stop', methods: ['GET'])]
     public function stopTaskAjax(Request $request, ManagerRegistry $doctrine): Response
     {
         $taskId = $request->query->get('taskId', -1);
@@ -79,6 +102,19 @@ class TaskController extends AbstractController
         $entityManager->flush();
 
         return new Response("success");
+    }
+
+    #[Route(path: '/task_resume/', name: 'task_resume', methods: ['GET'])]
+    public function resumeTaskAjax(Request $request, ManagerRegistry $doctrine): Response
+    {
+        $taskId = $request->query->get('taskId', -1);
+        if ($taskId == -1)return new Response("error");
+        
+        $task = $doctrine->getRepository(Task::class)->find($taskId);
+
+        if ($this->startTask($doctrine,$task)) return new Response("success");
+
+        return new Response("error");
     }
 
     /*

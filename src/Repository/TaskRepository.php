@@ -3,8 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\Task;
+use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\Query\ResultSetMapping;
 
 /**
  * @extends ServiceEntityRepository<Task>
@@ -53,6 +55,26 @@ class TaskRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult()
        ;
+    }
+
+    public function findElapsedTimeToday(): \DateInterval
+    {
+        $rsm = new ResultSetMapping();
+        $rsm->addScalarResult('total','t');
+        $query = $this->getEntityManager()->createNativeQuery("
+            SELECT sum(TIME_TO_SEC(timediff(end_time,start_time))) as total 
+            FROM task_times where date(start_time) = date(now())    
+        ",$rsm);
+        $t = $query->getResult();
+        if(count($t)!=1) return new \DateInterval('PT0S');     
+        if($t[0]['t']=='') return new \DateInterval('PT0S');
+
+        // t is an array which contains the number of seconds
+        //var_dump: array(1) { [0]=> array(1) { ["t"]=> string(4) "6358" } }
+        //we return a Dateinterval 
+
+        $dti = new \DateInterval('PT'.$t[0]['t'].'S');
+        return $dti;
     }
 
 //    public function findOneBySomeField($value): ?Task

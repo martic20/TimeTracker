@@ -35,7 +35,7 @@
             <div class="col-lg-4 d-flex justify-content-start"> #}
               <span class="badge text-dark" style="margin-left:20px;margin-top:10px;">
                   <h4 class="text-secondary">Avui has treballat:  
-                    <span class="badge text-bg-info">5454</span>
+                    <span id="global_timer" class="badge text-bg-info">{{globalTask.elapsedTime|date("%hh %i' %s''")}}</span>
                   </h4>
                 </span>
             </div>
@@ -75,10 +75,16 @@
                   <tr>
                     {# <td class="d-none d-sm-block"><p>{{task.id}}</p></td> #}
                     <td><p>{% if startedTaskId == task.id %}<b>{{task.name}}</b>{% else %}{{task.name}}{% endif %}</p></td>
-                    <td><h4><span class="badge text-bg-{% if startedTaskId == task.id %}warning{% else %}info{% endif %}">{{task.elapsedTime|date("%i'%s''")}}</span></h4></td>
+                    <td>                    
+                    {% if startedTaskId == task.id %}
+                      <h4><span id="task_timer" class="badge text-bg-warning">{{task.elapsedTime|date("%hh %i' %s''")}}</span></h4>
+                    {%else%}                    
+                      <h4><span class="badge text-bg-info">{{task.elapsedTime|date("%hh %i' %s''")}}</span></h4>
+                    {%endif%}
+                    </td>
                     <td>
                       {% if startedTaskId == -1 %}
-                        <button type="button" class="btn btn-warning">Seguir <i class="bi bi-play-fill" style="font-size:1em"></i></button></td>
+                        <button type="button" task_id="{{task.id}}" class="btn btn-warning action_task_resume">Seguir <i class="bi bi-play-fill" style="font-size:1em"></i></button></td>
                       {% elseif startedTaskId == task.id %}
                         <button id="task_stop_{{task.id}}" task_id="{{task.id}}" type="button" class="btn btn-warning action_task_stop"><b>Aturar </b><i class="bi bi-pause-fill" style="font-size:1em"></i></button></td>
                       {% endif %}
@@ -114,7 +120,10 @@
         </div>
     </body>
     <script>
-    $('#ajax_msg').hide();
+      //hide error message box
+      $('#ajax_msg').hide();
+
+      //stop task timer function
       $('.action_task_stop').on('click', function(e){
         var id = $(this).attr('task_id');
         $.ajax({
@@ -134,14 +143,77 @@
                 $('#ajax_msg').show();
 
               }
-
             },
             error:function(e){
                 $('#ajax_msg').text("Hi ha hagut un error. Comprova que tinguis internet.");
                 $('#ajax_msg').show();
             }
         });
-
       });
+
+      //start task timer function
+      $('.action_task_resume').on('click', function(e){
+        var id = $(this).attr('task_id');
+        $.ajax({
+            url:'{{ (path('task_resume')) }}',
+            type: "GET",
+            dataType: "text",
+            data: {
+                "taskId": id
+            },
+            async: true,
+            success: function (response)
+            {
+              if(response=="success"){
+                location.reload();
+              }else{
+                $('#ajax_msg').text("No es pot aturar aquesta tasca! Refresca la pàgina per comprovar que no hi hagi cap altra tasca activa.");
+                $('#ajax_msg').show();
+
+              }
+            },
+            error:function(e){
+                $('#ajax_msg').text("Hi ha hagut un error. Comprova que tinguis internet.");
+                $('#ajax_msg').show();
+            }
+        });
+      });
+      
+      //update times displayed
+      var globalTime = new Date(Date.UTC(
+        '1995','12','17',
+        '{{globalTask.elapsedTime|date("%h")}}',
+        '{{globalTask.elapsedTime|date("%i")}}',
+        '{{globalTask.elapsedTime|date("%s")}}'
+      ));
+      $('#global_timer').html(globalTime.getUTCHours()+"h "+globalTime.getUTCMinutes()+"' "+globalTime.getUTCSeconds()+"''"  );
+
+
+      {% if startedTaskId != -1 %}
+        var taskTime = new Date(Date.UTC(
+          '1995','12','17',
+          '{{startedTask.elapsedTime|date("%h")}}',
+          '{{startedTask.elapsedTime|date("%i")}}',
+          '{{startedTask.elapsedTime|date("%s")}}'
+        ));
+      {% endif %}
+
+      function updateTime() {
+          /// update glbal time
+          globalTime = new Date(globalTime.getTime() + 1000);
+          $('#global_timer').html(globalTime.getUTCHours()+"h "+globalTime.getUTCMinutes()+"' "+globalTime.getUTCSeconds()+"''"  );
+
+          //update task time
+          {% if startedTaskId != -1 %}  
+            taskTime = new Date(taskTime.getTime() + 1000);
+            $('#task_timer').html(taskTime.getUTCHours()+"h "+taskTime.getUTCMinutes()+"' "+taskTime.getUTCSeconds()+"''"  );
+          {% endif %}
+      }
+
+      
+      {% if startedTaskId != -1 %}
+        updateTime();
+        setInterval(updateTime, 1000);
+      {% endif %}
     </script>
 </html>
