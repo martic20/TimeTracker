@@ -12,6 +12,7 @@ use App\Entity\Task;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 
+
 class TaskController extends AbstractController
 {
 
@@ -41,8 +42,9 @@ class TaskController extends AbstractController
             }else{
                 $this->addFlash(
                     "danger",
-                    "No s'ha pogut iniciar la tasca, prova de refrescar la pàgina"
+                    "No s'ha pogut iniciar la tasca, prova de refrescar la pàgina."
                 );
+                return $this->redirectToRoute('task_list');
             }      
             
         }
@@ -71,7 +73,7 @@ class TaskController extends AbstractController
         if($taskTime->end() == false) return new Response("error");
         $task->addElapsedTime($taskTime);
         $task->setStatusStopped();
-        
+
         $entityManager = $doctrine->getManager();
         $entityManager->persist($task);
         $entityManager->flush();
@@ -100,8 +102,14 @@ class TaskController extends AbstractController
     {
         $entityManager = $doctrine->getManager();
         
-        if ($this->checkForStartedTask($doctrine)==-1){
+        if ($this->checkForStartedTask($doctrine)!=-1){
             return false;
+        }
+        
+        //if has the same name, add the time to the already existing task
+        $existingTask = $doctrine->getRepository(Task::class)->findBy(["name" => $task->getName()]);
+        if(count($existingTask)==1){
+            $task = $existingTask[0];
         }
 
         $task->setStatusStarted();
@@ -110,15 +118,5 @@ class TaskController extends AbstractController
         $entityManager->flush();
 
         return true;
-    }
-
-    /*
-        To end a task we need to have only one taskTime with endtime == null
-        but in the case we have more than one we will ignore the olders
-    */
-    private function endTask(ManagerRegistry $doctrine, Task $task ): Task
-    {   
-    
-        return $task;
     }
 }
