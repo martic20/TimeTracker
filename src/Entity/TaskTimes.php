@@ -53,6 +53,25 @@ class TaskTimes
         return $this;
     }
 
+    public function start(): self
+    {
+        $this->start_time = new \DateTime();
+        return $this;
+    }
+
+    /*
+        When end_time is not null this method has no effect!
+        To protect stored data
+    */
+    public function end(): bool
+    {
+        if ($this->end_time == null) {
+            $this->end_time = new \DateTime();
+            return true;
+        }
+        return false;
+    }
+
     public function getEndTime(): ?\DateTimeInterface
     {
         return $this->end_time;
@@ -63,5 +82,10 @@ class TaskTimes
         $this->end_time = $end_time;
 
         return $this;
+    }
+
+    public function isNotClosed(){
+        if ($this->end_time == null) return true;
+        return false;
     }
 }

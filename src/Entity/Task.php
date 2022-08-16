@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\TaskRepository;
+use DateTime;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -22,7 +23,7 @@ class Task
     #[ORM\Column(type: Types::SMALLINT)]
     private ?int $status = 0;
 
-    #[ORM\OneToMany(mappedBy: 'task', targetEntity: TaskTimes::class, orphanRemoval: true)]
+    #[ORM\OneToMany(mappedBy: 'task', targetEntity: TaskTimes::class, orphanRemoval: true, cascade: ["persist", "remove"])]
     private Collection $taskTimes;
 
     #[ORM\Column(type: 'dateinterval')]
@@ -93,6 +94,24 @@ class Task
         return $this;
     }
 
+    /*
+        Create a new task time item for storing the start time of the task.
+        If already exists some task time without end time don't create new tasktime
+
+    */
+    public function createTaskTime(): bool
+    {
+        foreach($this->taskTimes as $taskTimes) {
+            if ($taskTimes->isNotClosed()) return false;
+        }
+        $taskTime = new TaskTimes();
+        $taskTime->start();        
+        $taskTime->setTask($this);
+        $this->taskTimes->add($taskTime);
+
+        return true;
+    }
+
     public function removeTaskTime(TaskTimes $taskTime): self
     {
         if ($this->taskTimes->removeElement($taskTime)) {
@@ -113,6 +132,20 @@ class Task
     public function setElapsedTime(\DateInterval $elapsed_time): self
     {
         $this->elapsed_time = $elapsed_time;
+
+        return $this;
+    }
+
+    public function addElapsedTime(TaskTimes $taskTime): self
+    {
+        $initialTempDate = new DateTime();
+        $finalTempDate = clone $initialTempDate;
+        $time = $taskTime->getStarttime()->diff($taskTime->getEndTime());
+        
+        $finalTempDate->add($this->elapsed_time);
+        $finalTempDate->add($time);
+
+        $this->elapsed_time = $finalTempDate->diff($initialTempDate);
 
         return $this;
     }

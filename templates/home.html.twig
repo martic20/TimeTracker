@@ -10,42 +10,138 @@
             <!-- CSS only -->
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
             <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+            <style>
 
+            </style>
         {% endblock %}
 
         {% block javascripts %}
             {{ encore_entry_script_tags('app') }}
             <!-- JavaScript Bundle with Popper -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+            <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+            
         {% endblock %}
     </head>
     <body>
         {% block body %}{% endblock %}
         <br>
-        <div class="container-md" >
-          <h1>Registre de temps</h1>
+        <br>
+        <div class="container-lg" >
+          <div class="row">
+            <div class="col-sm-8 d-flex justify-content-start">
+              <h1>Registre de temps</h1>
+            {# </div>
+            <div class="col-lg-4 d-flex justify-content-start"> #}
+              <span class="badge text-dark" style="margin-left:20px;margin-top:10px;">
+                  <h4 class="text-secondary">Avui has treballat:  
+                    <span class="badge text-bg-info">5454</span>
+                  </h4>
+                </span>
+            </div>
+            <div class="col-sm-4 d-flex justify-content-end align-self-end">
+              {% if startedTaskId == null %}                   
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#newTaskModal">Afegir nova tasca <i class="bi bi-plus" style="font-size:1em"></i></button>
+              {%endif%}
+            </div>
+          </div>  
+          <br>
+          {% for label, messages in app.flashes %}
+              {% for message in messages %}
+              <div class="row">
+                <div class="alert alert-{{label}}" role="{{label}}">
+                  {{message}} {{label}}
+                </div>  
+                <br>
+              </div>                   
+              {% endfor %}
+          {% endfor %}
+          <div id="ajax_msg" class="alert alert-danger" role="alert">
+
+          </div>
+          
           <div class="table-responsive">
             <table class="table" style="font-size: 15pt;">
               <thead>
                 <tr>
-                  <th class="d-none d-sm-block">#</th>
-                  <th scope="col">Tasca</th>
-                  <th scope="col">Temps dedicat</th>
-                  <th scope="col">Accions</th>
+                  {# <th class="d-none d-sm-block">#</th> #}
+                  <th width="60%" scope="col">Tasca</th>
+                  <th width="16%" scope="col">Temps dedicat</th>
+                  <th width="24%" scope="col">Accions</th>
                 </th>
               </thead>
               <tbody>
                 {% for task in tasks %}
                   <tr>
-                    <td class="d-none d-sm-block"><p>{{task.id}}</p></td>
-                    <td><p>{{task.name}}</p></td>
-                    <td><h4><span class="badge text-bg-info">{{task.elapsedTime|date("%i'%s''")}}</span></h4></td>
-                    <td><button type="button" class="btn btn-success">Seguir <i class="bi bi-play-fill" style="font-size:1em"></i></button></td>
+                    {# <td class="d-none d-sm-block"><p>{{task.id}}</p></td> #}
+                    <td><p>{% if startedTaskId == task.id %}<b>{{task.name}}</b>{% else %}{{task.name}}{% endif %}</p></td>
+                    <td><h4><span class="badge text-bg-{% if startedTaskId == task.id %}warning{% else %}info{% endif %}">{{task.elapsedTime|date("%i'%s''")}}</span></h4></td>
+                    <td>
+                      {% if startedTaskId == -1 %}
+                        <button type="button" class="btn btn-warning">Seguir <i class="bi bi-play-fill" style="font-size:1em"></i></button></td>
+                      {% elseif startedTaskId == task.id %}
+                        <button id="task_stop_{{task.id}}" task_id="{{task.id}}" type="button" class="btn btn-warning action_task_stop"><b>Aturar </b><i class="bi bi-pause-fill" style="font-size:1em"></i></button></td>
+                      {% endif %}
+                      
                   </tr>
                 {% endfor %}
                 <tr>
             </table>
           </div>       
         </div>
+
+        <div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              {{ form_start(form) }}
+                <div class="modal-header">
+                  <h5 class="modal-title">Tasca nova</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  {{ form_errors(form) }}
+                  {{ form_row(form.name, {'label':'Nom'}) }}
+                </div>
+                <div class="modal-footer">
+                  <div class="mb-3">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                  </div>
+                  {{ form_row(form.save, {'label':'Iniciar tasca'}) }}
+                </div>
+              {{ form_end(form) }}
+            </div>
+          </div>
+        </div>
     </body>
+    <script>
+    $('#ajax_msg').hide();
+      $('.action_task_stop').on('click', function(e){
+        var id = $(this).attr('task_id');
+        $.ajax({
+            url:'{{ (path('task_stop')) }}',
+            type: "GET",
+            dataType: "text",
+            data: {
+                "taskId": id
+            },
+            async: true,
+            success: function (response)
+            {
+              if(response=="success"){
+                location.reload();
+              }else{
+                $('#ajax_msg').text("No es pot aturar aquesta tasca! Refresca la pàgina per comprovar que no hi hagi cap altra tasca activa.");
+                $('#ajax_msg').show();
+
+              }
+
+            },
+            error:function(e){
+                $('#ajax_msg').text("Hi ha hagut un error. Comprova que tinguis internet.");
+                $('#ajax_msg').show();
+            }
+        });
+
+      });
+    </script>
 </html>

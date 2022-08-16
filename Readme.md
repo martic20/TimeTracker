@@ -26,7 +26,7 @@ the day I should see 2.5h near “homepage development”.
 
 1. 😀 Clone this rep.
 
-2. Create the file `./.docker/.env.nginx.local` using `./.docker/.env.nginx` as template. The value of the variable `NGINX_BACKEND_DOMAIN` is the `server_name` used in NGINX.
+2. Create the file `./.docker/.env.nginx.local` using `./.docker/.env.nginx` as template. The value of the variable `NGINX_BACKEND_DOMAIN` is the `server_name` used in NGINX. Also create the `.env` file from `env.dist` and the `.docker/.env` from `.docker/.env.dist`. As a test app you can use the predefined variables and passwords.
 
 3. Go inside folder `./docker` and run `docker-sync-stack start` to start containers.
 
@@ -41,8 +41,6 @@ DATABASE_URL=mysql://app_user:helloworld@db:3306/app_db?serverVersion=8.0.23
 ```
 
 You could change the name, user and password of the database in the `env` file at the root of the project.
-
-7. Generate the .env file from env.dist and the .docker/.env from .docker/.env.dist with the correct user data and passwords.
 
 ## Credits
 Created using this BoilerPlate: [Docker + PHP 8.1 + MySQL + Nginx + Symfony 6.1 Boilerplate](https://github.com/ger86/symfony-docker)

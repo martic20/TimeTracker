@@ -39,20 +39,21 @@ class TaskRepository extends ServiceEntityRepository
         }
     }
 
-//    /**
-//     * @return Task[] Returns an array of Task objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('t')
-//            ->andWhere('t.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('t.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
+   /**
+    * @return Task Returns a Task object
+    */
+    public function findStartedTask(): array
+    {
+        return $this->createQueryBuilder('t')
+            // ->leftJoin('t.taskTimes', 'times')
+            ->andWhere('t.status = 1')
+            // ->setParameter('val', $value)
+            ->orderBy('t.id', 'ASC')
+            // ->setMaxResults(1)
+            ->getQuery()
+            ->getResult()
+       ;
+    }
 
 //    public function findOneBySomeField($value): ?Task
 //    {
