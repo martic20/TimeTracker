@@ -39,6 +39,7 @@ the day I should see 2.5h near “homepage development”.
 ```
 DATABASE_URL=mysql://app_user:helloworld@db:3306/app_db?serverVersion=8.0.23
 ```
+7. Inside the `php` container, run `php bin/console doctrine:migrations:migrate` to create the database schema.
 
 You could change the name, user and password of the database in the `env` file at the root of the project.
 
