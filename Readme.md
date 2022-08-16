@@ -42,5 +42,13 @@ DATABASE_URL=mysql://app_user:helloworld@db:3306/app_db?serverVersion=8.0.23
 
 You could change the name, user and password of the database in the `env` file at the root of the project.
 
+## Console
+
+You can use the web application via broswer or via console. The commands for the console are:
+- 'php bin/console app:task start taskname' for starting a new task.
+- 'php bin/console app:task end taskname' for ending a task.
+- 'php bin/console app:task list' for listing info about all the tasks.
+
+
 ## Credits
 Created using this BoilerPlate: [Docker + PHP 8.1 + MySQL + Nginx + Symfony 6.1 Boilerplate](https://github.com/ger86/symfony-docker)

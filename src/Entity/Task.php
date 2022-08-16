@@ -129,6 +129,11 @@ class Task
         return $this->elapsed_time;
     }
 
+    public function getElapsedTimeStr(): string
+    {
+        return $this->elapsed_time->format("%Hh %I' %S''");
+    }
+
     public function setElapsedTime(\DateInterval $elapsed_time): self
     {
         $this->elapsed_time = $elapsed_time;
