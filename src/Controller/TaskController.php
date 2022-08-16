@@ -91,17 +91,11 @@ class TaskController extends AbstractController
 
         if ($task == null) return new Response("error");
         
-        $taskTime = $task->getTaskTimes()->last();
-        
-        if($taskTime->end() == false) return new Response("error");
-        $task->addElapsedTime($taskTime);
-        $task->setStatusStopped();
-
-        $entityManager = $doctrine->getManager();
-        $entityManager->persist($task);
-        $entityManager->flush();
-
-        return new Response("success");
+        if($this->stopTask($doctrine, $task)){
+            return new Response("success");
+        }else{
+            return new Response("error");
+        }        
     }
 
     #[Route(path: '/task_resume/', name: 'task_resume', methods: ['GET'])]
@@ -134,7 +128,7 @@ class TaskController extends AbstractController
         }
     }
     
-    private function startTask(ManagerRegistry $doctrine, Task $task ): bool
+    public function startTask(ManagerRegistry $doctrine, Task $task ): bool
     {
         $entityManager = $doctrine->getManager();
         
@@ -150,6 +144,22 @@ class TaskController extends AbstractController
 
         $task->setStatusStarted();
         $task->createTaskTime();
+        $entityManager->persist($task);
+        $entityManager->flush();
+
+        return true;
+    }
+
+    public function stopTask(ManagerRegistry $doctrine, $task):bool{      
+        if ($task == null) return false;
+        if($task->getTaskTimes()->isEmpty()) return false;
+        $taskTime = $task->getTaskTimes()->last();
+        
+        if($taskTime->end() == false) return false;
+        $task->addElapsedTime($taskTime);
+        $task->setStatusStopped();
+
+        $entityManager = $doctrine->getManager();
         $entityManager->persist($task);
         $entityManager->flush();
 
