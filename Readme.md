@@ -45,9 +45,9 @@ You could change the name, user and password of the database in the `env` file a
 ## Console
 
 You can use the web application via broswer or via console. The commands for the console are:
-- 'php bin/console app:task start taskname' for starting a new task.
-- 'php bin/console app:task end taskname' for ending a task.
-- 'php bin/console app:task list' for listing info about all the tasks.
+- `php bin/console app:task start taskname` for starting a new task.
+- `php bin/console app:task end taskname` for ending a task.
+- `php bin/console app:task list` for listing info about all the tasks.
 
 
 ## Credits
