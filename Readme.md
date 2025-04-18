@@ -42,6 +42,10 @@ DATABASE_URL=mysql://app_user:helloworld@db:3306/app_db?serverVersion=8.0.23
 
 You could change the name, user and password of the database in the `env` file at the root of the project.
 
+## Troubleshooting
+
+`docker-sync-stack` no longer works with the newer versions of docker so do: `pip install docker==6.1.3`.
+
 ## Console
 
 You can use the web application via broswer or via console. The commands for the console are:
